@@ -39,6 +39,32 @@ def predict_data():
         prediction = f'{pred_lb} with Probability : {prob:.4f}'
 
         return render_template('index.html',prediction=prediction)
+    
+# Creating an API
+@app.route('/predict_api',methods=['POST'])
+def predict_point():
+    if request.method=='POST':
+        sep_len = request.json['sepal_length']
+        sep_wid = request.json['sepal_width']
+        pet_len = request.json['petal_length']
+        pet_wid = request.json['petal_width']
+
+        pre_path = 'notebooks/Preprocessor.pkl'
+        xnew = load_dataframe(sep_len, sep_wid, pet_len, pet_wid, pre_path)
+
+        le_path = 'notebooks/LabelEnc.pkl'
+        model_path = 'notebooks/model.pkl'
+
+        le = load_pickle(le_path)
+        model = load_pickle(model_path)
+
+        pred = model.predict(xnew)
+        pred_lb = le.inverse_transform(pred)[0]
+
+        prob = model.predict_proba(xnew).max()
+
+        return jsonify({'Prediction':pred_lb,
+                        'Probability':prob})
 
 
 if __name__ == '__main__':
